@@ -1,0 +1,199 @@
+.chapter(data-title='SMS Application Walkthrough')
+  .step(data-title='Welcome!', data-file='../README.MD', data-highlight='11-61')
+    h2 Welcome to SMS Application Walk-through
+
+    p This walk-through of an SMS application will show you how to go about building a fully functional SMS application. In this walk-through you will learn:
+
+    ul
+        li How to send an SMS message.
+        li How to send an MMS message
+        li How to track the delivery state of a message.
+        li How to modify the message's read status.
+        li How to delete a message.
+        li How to receive and reply to an SMS message.
+
+    h3 Other Languages
+
+    p This walk-through is also available in the following languages:
+
+    ul
+      li
+        a(href="https://ringcentral-tutorials.github.io/sms-api-php-quickstart/") PHP
+      li
+        a(href="https://ringcentral-tutorials.github.io/sms-api-node-quickstart/") Node
+      li
+          a(href="https://ringcentral-tutorials.github.io/sms-api-python-demo/") Python
+      li
+          a(href="https://ringcentral-tutorials.github.io/sms-api-java-demo/") C#
+
+  .step(data-title='Setup Your Project', data-file='../src/main/java/sms/api/java/demo/sms_api_tutorial.java', data-highlight='16-23')
+    :markdown
+      ## Clone and Setup the project
+
+      ```
+      $ git clone https://github.com/ringcentral-tutorials/sms-api-java-demo
+      $ cd sms-api-java-demo
+      $ open the project using Eclipse IDE
+      ```
+
+      Specify your app client id and client secret as well as account login credentials to the constant defined within the brackets "< >".
+
+.chapter(data-title='Sending an SMS')
+  .step(data-title='Sending an SMS', data-file='../src/main/java/sms/api/java/demo/sms_api_tutorial.java', data-highlight='40-50')
+    :markdown
+      ## Sending an SMS
+
+      Let's create a function named `send_sms()` as shown on the right-hand side pane.
+
+      It is very convenient to access RingCentral platform using the [RingCentral Java SDK](https://github.com/ringcentral/ringcentral-java).
+
+      First, we create an instance of the RingCentral Java SDK `RestClient` and passing along the client Id and client secret. We also specify the platform environment and in this demo we target the sandbox environment.
+
+      Then, we call the `authorize` function to authenticate a user. In this step, we pass the username and password and optionally the extension number.
+
+      We create an instance of the `CreateSMSMessage` object and set the required query parameters, which include the __from__, __to__ and the __text__ message.
+
+      Finally, we call the `rc.restapi().account().extension().sms().post(parameters);` method to send the message.
+
+      This code will work right out of the box. So let's try it out. Go to the main() function and uncomment the line `//obj.send_sms();` then run the app.
+
+      You should see the message delivery status output to the screen, and shortly an SMS will arrive on the recipient's phone.
+
+      You have just successfully sent an SMS programmatically from your sandbox to a recipient.
+
+      ### Important
+
+      Bear in mind that you can only send SMS messages from a phone number which belongs to the user who is being authenticated to use the app.
+
+      Pay attention to the `parameters.to` which is an array. This means that you can specify multiple recipients to send a group message.
+
+.chapter(data-title='Sending an SMS')
+  .step(data-title='Sending an MMS', data-file='../src/main/java/sms/api/java/demo/sms_api_tutorial.java', data-highlight='51-69')
+    :markdown
+      ## Send an MMS
+
+      Let's continue to create a function named `send_mms()` as shown on the right-hand side pane.
+
+      We follow the same step to create an instance of the RingCentral Java SDK `RestClient`, call the `authorize` method to login before sending a message.
+
+      We create an instance of the `CreateMMSMessage` object and set the required query parameters, which include the __from__, __to__ and the __text__ message.
+
+      In addition to specifying the __from__, the __to__ and the __text__ query parameters, we create an `attachment` to hold the binary content and add the `attachment` to the `attachments` array. This means that we can send multiple attachments in a single MMS message.
+
+      Finally, we call the `rc.restapi().account().extension().mms().post(parameters);` method to send the message.
+
+      Let's try it out. Go to the main() function and uncomment the line `//obj.send_mms();` then run the app.
+
+      You should see the message delivery status output to the screen, and shortly an MMS will arrive on the recipient's phone.
+
+      ### RingCentral supported MMS content types
+
+      - Images: jpg/jpeg, png, gif, bmp, tif/tiff, svg
+      - Videos: 3gp, mp4, mpeg, flv, wmv, mov
+      - Audio: mp3
+      - Files: vcf/vcard, zip, rtf, html
+
+      ### Message size limit
+
+      The maximum size for MMS is carrier-dependent and normally around 1.2MB to 1.4MB.
+
+      You can send multiple attachments in a single MMS message. But the total size of attachments should not exceed the size limit above!
+
+  .step(data-title='Track the delivery', data-file='../src/main/java/sms/api/java/demo/sms_api_tutorial.java', data-highlight='68,70-83')
+    :markdown
+      ## Track the delivery status of a message
+
+      It takes some time for the system to send and deliver a message to a recipient. The delivery status of a particular message can be tracked using the __message-store__ endpoint.
+
+      After sending the MMS message in the previous step, we call the `track_status()` method, passing along the instance of the SDK, the `messageId` and the `messageStatus`.  We'll use the `messageId` to identify the message we want to track the delivery status.
+
+      Inside the `track_status()` method, we implement a while loop and check if the `mesasgeStatus` value is equal to "Queued", we cause a second delay then call the `MessageStore(id).Get()` method to read and print out the latest delivery status of the message.
+
+      Let's try it out. Uncomment the line `//track_status(rc, response.id, response.messageStatus);` then run the app again.
+
+  .step(data-title='Change the message read status', data-file='../src/main/java/sms/api/java/demo/sms_api_tutorial.java', data-highlight='84-105')
+    :markdown
+      ### Change the message read status
+
+      Every message has the `readStatus` as "Read" or "Unread". We can retrieve a message metadata from the message store and change the `readStatus` as we want.
+
+      Let's implement the `retrieve_modify()` method.
+
+      To read the metadata of recent messages from the user's message store, we create an instance of the `ListMessagesParameters` object, set the `requestParams.readStatus` to "Unread" so we retrieve only recent unread messages from the message store. Then we call the `messagestore().list(requestParams);`
+
+      The JSON response `resp` contains an array of records. We iterate thru the records array, read the message id, create and instance of the `UpdateMessageRequest` object and set the `updateRequest.readStatus` to "Read". Then we call the `messagestore(messageId).put(updateRequest);` to change the `readStatus` of that message.
+
+      Let's try it out. Go to the main() function and uncomment the line `//obj.retrieve_modify();` then run the app.
+
+      ### Specify other request parameters
+
+      You can set other request parameters such as the `dateFrom` and `dateTo` to retrieve messages created within the specified date and time period. The default date and time period is the current time minus 24 hours.
+
+  .step(data-title='Delete messages', data-file='../src/main/java/sms/api/java/demo/sms_api_tutorial.java', data-highlight='106-123')
+    :markdown
+      ### Delete messages
+
+      Let's implement the `retrieve_delete()` method.
+
+      Similar to the previous step, we retrieve recent messages using the `readStatus` filter but this time, we read those messages which have the `readStatus` as "Read".
+
+      Then, we iterate thru the `records` array, read the message id, and call the `messagestore(messageId).delete();` to delete the message.
+
+      Let's try it out. Go to the Main function and uncomment the line `//obj.retrieve_delete();` then run the app.
+
+      If you want to delete all the messages from the `records` array, comment out the __break__ line.
+
+.chapter(data-title='Receive - Reply to SMS messages')
+  .step(data-title='Receiving SMS messages', data-file='../src/main/java/sms/api/java/demo/sms_api_tutorial.java', data-highlight='124-147')
+    :markdown
+      In this step, you will learn how to listen for incoming SMS messages and new voicemail message, then reply with an SMS message to the sender of that incoming message or incoming call.
+
+      ### Listen for incoming SMS messages
+
+      Let's implement the `receive_reply()` method.
+
+      We follow the same step to create an instance of the RingCentral Java SDK `RestClient`, call the `authorize` method to login before moving on to execute the codes.
+
+      First, we create an `eventFilters` array and add the following filter to the array:
+
+      - "/account/~/extension/~/message-store/instant?type=SMS": for receiving incoming SMS notifications.
+
+      As you can see, we can specify multiple event notifications in a single subscription to get notified for different types of events without the need of creating multiple subscriptions.
+
+      Then, we create an instance of the `Subscription` object, passing along the `rc` and the `eventFilters` parameters. The last parameter is a callback function which will be called every time we receive a notification of the event we subscribed for. Within the callback function, we will call the `reply_sms_message()` method, which will be implemented in the next step.
+
+      Next, we call the `subscription.subscribe()` method to register for the event notification.
+
+      We also create a while loop to keep the process running so we can test the demo app. We use the `waitLoop` flag to terminate the process when we set its value to __false__.
+
+      ### Subscription limitations
+
+      Each account can register up to maximum 20 subscriptions. Therefore, using multiple event notifications in a subscription, when possible, will help overcome the limitation.
+
+      Active subscriptions will expire. The `subscription` object created by the SDK will renew the subscription automatically on your behalf as long as your app is still logged in and the platform refresh token is still valid.
+
+      ### PubNub Notification Alternative
+
+      The subscription we created above uses [PubNub](https://www.pubnub.com/).
+
+      There is also a [WebHook way to do subscription](https://developers.ringcentral.com/guide/notifications/quick-start/webhook/java). We won't dive into detail here. You can click the link to read more.
+
+  .step(data-title='Replying with a SMS message', data-file='../src/main/java/sms/api/java/demo/sms_api_tutorial.java', data-highlight='132,148-168')
+    :markdown
+      ## Replying with an SMS message
+
+      When there is an incoming SMS message or a new voicemail, we call the `reply_sms_message()` function, passing along the `rc` and the `message` objects.
+
+      As we registered for multiple event notifications, we need to detect which event notification was triggered before we take an action on the notification.
+
+      We simply check the `jsonObj.getString("event")` value to see if it contains the name of the event type we've registered for.
+
+      In this tutorial, if it is the "/instant?type=SMS", we parse the message body to get the sender's phone number, and we compose a message then send the message to the `senderNumber`.
+
+      Let's try it out. Go to the main() function and uncomment the line `//obj.receive_reply();` then run the app.
+
+      If you don't want to terminate the process after receiving and replying a message, comment out the `waitLoop = false` line.
+
+      ## Congratulations!
+
+      And that's it. You should have successfully build a number of the components of an SMS application.
