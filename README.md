@@ -1,4 +1,4 @@
-# Messages API C# Tutorial
+# Messages API Java Tutorial
 
 [![Community][community-img]][community-url]
 [![Twitter][twitter-img]][twitter-url]
